@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import {
   Card,
   Container,
@@ -11,6 +11,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import axios from 'axios';
 import { BASE_URL } from "./shared/axios/AxiosApi.ts";
+import Spinner from "./shared/Spinner/Spinner.tsx";
 
 const App = () => {
 
@@ -18,12 +19,15 @@ const App = () => {
   const [encoded, setEncoded] = useState('');
   const [password, setPassword] = useState('');
 
+  const isPasswordEmpty = !password.trim();
+  const isDecodedEmpty = !decoded.trim();
+  const isEncodedEmpty = !encoded.trim();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleEncode = async () => {
-    if (!password.trim()) {
-      alert("empty");
-      return;
-    }
+    if (isPasswordEmpty || isDecodedEmpty) return;
+    setIsLoading(true);
 
     try {
       const response = await axios.post(`${BASE_URL}encode`, {
@@ -33,15 +37,15 @@ const App = () => {
       setEncoded(response.data.encoded);
       setDecoded('');
     } catch (e) {
-      console.log(e)
+      console.log(e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDecode = async () => {
-    if (!password.trim()) {
-      alert("empty");
-      return;
-    }
+    if (isPasswordEmpty || isEncodedEmpty) return;
+    setIsLoading(true);
 
     try {
       const response = await axios.post(`${BASE_URL}decode`, {
@@ -51,8 +55,28 @@ const App = () => {
       setDecoded(response.data.decoded);
       setEncoded('');
     } catch (e) {
-      console.log(e)
+      console.log(e);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const onlyLatin = value.replace(/[^a-zA-Z]/g, '');
+    setPassword(onlyLatin);
+  };
+
+  const handleDecodedChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const onlyLatin = value.replace(/[^a-zA-Z]/g, '');
+    setDecoded(onlyLatin);
+  };
+
+  const handleEncodedChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const onlyLatin = value.replace(/[^a-zA-Z]/g, '');
+    setEncoded(onlyLatin);
   };
 
   return (
@@ -64,48 +88,53 @@ const App = () => {
       </Typography>
 
       <Container maxWidth="sm" style={{marginTop: '50px'}}>
-        <Stack spacing={3}>
-
+        <Stack>
+          {isLoading && <Spinner />}
           <TextField
-            label="Decoded message"
+            sx={{mb: 3}}
+            label="Decoded message (Latin)"
             multiline
             rows={4}
             type="text"
             fullWidth
             value={decoded}
-            onChange={(e) => setDecoded(e.target.value)}
+            onChange={handleDecodedChange}
           />
 
-          <Card sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+          <Card sx={{display: 'flex', alignItems: 'center', gap: 2, mb: 3}}>
             <TextField
-              placeholder="Password"
+              placeholder="Password (Latin)"
               type="text"
               fullWidth
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
             />
             <IconButton
               onClick={handleEncode}
               color="primary"
-              size="large">
+              size="large"
+              disabled={isPasswordEmpty || isDecodedEmpty}
+            >
               <ArrowDownwardIcon />
             </IconButton>
 
             <IconButton
               onClick={handleDecode}
               color="primary"
-              size="large">
+              size="large"
+              disabled={isPasswordEmpty || isEncodedEmpty}
+            >
               <ArrowUpwardIcon />
             </IconButton>
           </Card>
 
           <TextField
-            label="Encoded message"
+            label="Encoded message (Latin)"
             multiline
             rows={4}
             fullWidth
             value={encoded}
-            onChange={(e) => setEncoded(e.target.value)}
+            onChange={handleEncodedChange}
           />
 
         </Stack>
