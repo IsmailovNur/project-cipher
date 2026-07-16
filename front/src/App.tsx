@@ -1,4 +1,3 @@
-import './App.css';
 import { useState } from "react";
 import {
   Card,
@@ -10,6 +9,8 @@ import {
 } from '@mui/material';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import axios from 'axios';
+import { BASE_URL } from "./shared/axios/AxiosApi.ts";
 
 const App = () => {
 
@@ -18,10 +19,46 @@ const App = () => {
   const [password, setPassword] = useState('');
 
 
+  const handleEncode = async () => {
+    if (!password.trim()) {
+      alert("empty");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${BASE_URL}encode`, {
+        password: password,
+        message: decoded,
+      });
+      setEncoded(response.data.encoded);
+      setDecoded('');
+    } catch (e) {
+      console.log(e)
+    }
+  };
+
+  const handleDecode = async () => {
+    if (!password.trim()) {
+      alert("empty");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${BASE_URL}decode`, {
+        password: password,
+        message: encoded,
+      });
+      setDecoded(response.data.decoded);
+      setEncoded('');
+    } catch (e) {
+      console.log(e)
+    }
+  };
+
   return (
     <div className="App">
       <Typography
-        sx={{textAlign: 'center', color: 'text.secondary', mt: 4}}
+        sx={{textAlign: 'center', color: 'text.primary', mt: 4}}
         variant="h2"
       >Message Viginer Chiper
       </Typography>
@@ -47,11 +84,17 @@ const App = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <IconButton color="primary" size="large">
+            <IconButton
+              onClick={handleEncode}
+              color="primary"
+              size="large">
               <ArrowDownwardIcon />
             </IconButton>
 
-            <IconButton color="primary" size="large">
+            <IconButton
+              onClick={handleDecode}
+              color="primary"
+              size="large">
               <ArrowUpwardIcon />
             </IconButton>
           </Card>
